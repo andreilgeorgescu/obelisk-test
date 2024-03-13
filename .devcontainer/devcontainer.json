@@ -1,0 +1,30 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/base:1-ubuntu-22.04",
+	"features": {
+		"ghcr.io/devcontainers/features/nix:1": {
+			"version": "2.11",
+      "multiUser": false,
+      "extraNixConfig": "binary-caches = https://cache.nixos.org https://nixcache.reflex-frp.org,binary-cache-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI=,binary-caches-parallel-connections = 40,sandbox = true,experimental-features = nix-command"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"haskell.haskell"
+			]
+		}
+	},
+  "updateContentCommand": "nix-env -f https://github.com/obsidiansystems/obelisk/archive/master.tar.gz -iA command",
+  "postAttachCommand": "ob hoogle -v & ob run -v",
+  "forwardPorts": [8000, 8080],
+  "portsAttributes": {
+    "8000": {
+      "label": "Application",
+      "onAutoForward": "openBrowserOnce"
+    },
+    "8080": {
+      "label": "Hoogle",
+      "onAutoForward": "openBrowserOnce"
+    },
+  }
+}
