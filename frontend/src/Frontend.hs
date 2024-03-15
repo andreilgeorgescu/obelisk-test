@@ -46,6 +46,8 @@ frontend = Frontend
 
       elAttr "img" ("src" =: $(static "obelisk.jpg")) blank
       el "div" $ do
+        elClass "h1" "test" (text "testing")
+      el "div" $ do
         let
           cfg = "common/example"
           path = "config/" <> cfg
