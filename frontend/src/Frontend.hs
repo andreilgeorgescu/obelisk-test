@@ -82,8 +82,6 @@ frontend = Frontend
               elAttr "a" ("href" =: "#" <> "class" =: "text-sm font-semibold leading-6 text-gray-900") $ do
                 text "Log in"
                 elAttr "span" ("aria-hidden" =: "true") $ text "&rarr;"
-
-            el "h1" $ text "Test"
           elAttr "div" ("class" =: "lg:hidden" <> "role" =: "dialog" <> "aria-modal" =: "true") $ do
             elClass "div" "fixed inset-0 z-50" blank
             elClass "div" "fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10" $ do
