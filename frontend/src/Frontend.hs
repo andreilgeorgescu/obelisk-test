@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Frontend where
 
@@ -11,7 +13,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.String
 import Data.FileEmbed
-import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
+import Language.Javascript.JSaddle (MonadJSM, eval, liftJSM, JSVal, obj, jss, ToJSVal, JSM, fun, js, js1, jsg, js2, ghcjsPure, val)
+import JSDOM (currentDocumentUnchecked)
 
 import Obelisk.Frontend
 import Obelisk.Configs
@@ -22,6 +25,7 @@ import Reflex.Dom.Core
 
 import Common.Api
 import Common.Route
+
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -50,8 +54,24 @@ frontend = Frontend
 
       prerender_ blank $ void $ elDynHtml' "div" $ constDyn $(embedStringFile "frontend/src/test.html")
 
+      -- do
+      --   getElementByIdUnchecked "login"
+      --   el "h1" $ text "test"
+
       return ()
   }
+
+
+handleClick :: (MonadJSM m, ToJSVal a0) => String -> a0 -> m ()
+handleClick id callback = liftJSM $ do
+  doc <- currentDocumentUnchecked
+  loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
+  loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) callback
+  return ()
+
+loginClick :: MonadJSM m => m()
+loginClick = handleClick ("login" :: String) (fun $ \_ _ _ -> do
+    return ())
 
 -- Tailwind ui component found here: https://tailwindui.com/components/marketing/sections/heroes
 -- HTML rendering example: https://srid.ca/obelisk-tutorial
