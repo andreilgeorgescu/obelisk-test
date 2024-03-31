@@ -4,6 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecursiveDo #-}
 
 module Frontend where
 
@@ -13,8 +14,13 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.String
 import Data.FileEmbed
-import Language.Javascript.JSaddle (MonadJSM, eval, liftJSM, JSVal, obj, jss, ToJSVal, JSM, fun, js, js1, jsg, js2, ghcjsPure, val)
-import JSDOM (currentDocumentUnchecked)
+import Language.Javascript.JSaddle (MonadJSM, eval, liftJSM, runJSM, JSVal, obj, jss, ToJSVal, JSM, fun, js, js1, jsg, js2, ghcjsPure, val)
+import JSDOM (currentWindowUnchecked, currentDocumentUnchecked)
+-- import Control.Monad.Trans.State (liftIO)
+
+import Language.Javascript.JSaddle
+
+import Control.Monad.IO.Class
 
 import Obelisk.Frontend
 import Obelisk.Configs
@@ -54,6 +60,9 @@ frontend = Frontend
 
       prerender_ blank $ void $ elDynHtml' "div" $ constDyn $(embedStringFile "frontend/src/test.html")
 
+      -- evIncr <- loginClick
+      el "h1" $ display =<< count =<< loginClick
+
       -- do
       --   getElementByIdUnchecked "login"
       --   el "h1" $ text "test"
@@ -62,16 +71,48 @@ frontend = Frontend
   }
 
 
-handleClick :: (MonadJSM m, ToJSVal a0) => String -> a0 -> m ()
-handleClick id callback = liftJSM $ do
-  doc <- currentDocumentUnchecked
-  loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
-  loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) callback
-  return ()
+-- showAlert :: (() -> JSM ()) -> JSM ()
+-- showAlert onChange = do
+--   return js1 ("alert" :: String) ("login clicked" :: String)
 
-loginClick :: MonadJSM m => m()
-loginClick = handleClick ("login" :: String) (fun $ \_ _ _ -> do
-    return ())
+-- helper :: (a -> IO()) -> JSM ()
+-- helper onChangeCallback = do
+--   onChangeCallback ()
+--   return js1 "void" 0
+
+-- handleClick :: MonadJSM m => String -> m () -- (Event t0 ())
+-- handleClick id = liftJSM $ do
+--   doc <- currentDocumentUnchecked
+--   loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
+--   (onChangeEvent, onChangeCallback) <- newTriggerEvent
+--   loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) (fun $ \_ _ _ -> do
+--     window <- currentWindowUnchecked
+--     doc ^. js1 ("alert" :: String) ("login clicked" :: String)
+--     liftIO $ onChangeCallback () -- pure liftIO onChangeCallback -- pure $ liftIO . onChangeCallback
+--     return ())
+--   return () -- onChangeEvent
+
+-- loginClick :: MonadJSM m => m ()-- (Event t0 ())
+-- loginClick = handleClick ("login" :: String)
+
+
+handleClick :: String -> Event t0 ()
+handleClick id = do
+  (onChangeEvent, onChangeCallback) <- newTriggerEvent
+  liftJSM $ do
+    doc <- currentDocumentUnchecked
+    loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
+    loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) (fun $ \_ _ _ -> do
+      window <- currentWindowUnchecked
+      doc ^. js1 ("alert" :: String) ("login clicked" :: String)
+      liftIO $ onChangeCallback () -- pure liftIO onChangeCallback -- pure $ liftIO . onChangeCallback
+      return ())
+    return ()
+  return onChangeEvent
+
+-- loginClick :: MonadJSM m => m ()-- (Event t0 ())
+loginClick :: Event t0 ()
+loginClick = handleClick ("login" :: String)
 
 -- Tailwind ui component found here: https://tailwindui.com/components/marketing/sections/heroes
 -- HTML rendering example: https://srid.ca/obelisk-tutorial

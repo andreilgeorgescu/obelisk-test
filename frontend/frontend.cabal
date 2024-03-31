@@ -17,6 +17,8 @@ library
                , text
                , file-embed
                , jsaddle-dom
+               , mtl
+               , transformers
   exposed-modules:
     Frontend
   ghc-options: -Wall -O -fno-show-valid-hole-fits
