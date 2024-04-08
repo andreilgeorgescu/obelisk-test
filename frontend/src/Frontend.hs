@@ -60,59 +60,33 @@ frontend = Frontend
 
       prerender_ blank $ void $ elDynHtml' "div" $ constDyn $(embedStringFile "frontend/src/test.html")
 
-      -- evIncr <- loginClick
-      el "h1" $ display =<< count =<< loginClick
-
-      -- do
-      --   getElementByIdUnchecked "login"
-      --   el "h1" $ text "test"
-
       return ()
   }
 
+-- Should render text showing the number of times the login button was clicked
+tempElement :: MonadWidget t m => m ()
+tempElement = do
+  rec el "h2" $ text "Counter as a fold"
+      numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)
+      el "div" $ display numbs
+      evIncr <- handleClick ("login" :: String)
+  return ()
 
--- showAlert :: (() -> JSM ()) -> JSM ()
--- showAlert onChange = do
---   return js1 ("alert" :: String) ("login clicked" :: String)
-
--- helper :: (a -> IO()) -> JSM ()
--- helper onChangeCallback = do
---   onChangeCallback ()
---   return js1 "void" 0
-
--- handleClick :: MonadJSM m => String -> m () -- (Event t0 ())
--- handleClick id = liftJSM $ do
---   doc <- currentDocumentUnchecked
---   loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
---   (onChangeEvent, onChangeCallback) <- newTriggerEvent
---   loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) (fun $ \_ _ _ -> do
---     window <- currentWindowUnchecked
---     doc ^. js1 ("alert" :: String) ("login clicked" :: String)
---     liftIO $ onChangeCallback () -- pure liftIO onChangeCallback -- pure $ liftIO . onChangeCallback
---     return ())
---   return () -- onChangeEvent
-
--- loginClick :: MonadJSM m => m ()-- (Event t0 ())
--- loginClick = handleClick ("login" :: String)
-
-
-handleClick :: String -> Event t0 ()
+handleClick :: (TriggerEvent t m, MonadJSM m) => String -> m (Event t ())
 handleClick id = do
   (onChangeEvent, onChangeCallback) <- newTriggerEvent
   liftJSM $ do
     doc <- currentDocumentUnchecked
-    loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
-    loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) (fun $ \_ _ _ -> do
-      window <- currentWindowUnchecked
-      doc ^. js1 ("alert" :: String) ("login clicked" :: String)
-      liftIO $ onChangeCallback () -- pure liftIO onChangeCallback -- pure $ liftIO . onChangeCallback
+    window <- currentWindowUnchecked
+    window ^. js2 ("addEventListener" :: String) ("load" :: String) (fun $ \_ _ _ -> do
+      loginButton <- doc ^. js1 ("getElementById" :: String)  (id :: String)
+      loginButton ^. js2 ("addEventListener" :: String) ("click" :: String) (fun $ \_ _ _ -> do
+        doc ^. js1 ("alert" :: String) ("login clicked" :: String)
+        liftIO $ onChangeCallback () -- pure liftIO onChangeCallback -- pure $ liftIO . onChangeCallback
+        return ())
       return ())
-    return ()
+    return()
   return onChangeEvent
-
--- loginClick :: MonadJSM m => m ()-- (Event t0 ())
-loginClick :: Event t0 ()
-loginClick = handleClick ("login" :: String)
 
 -- Tailwind ui component found here: https://tailwindui.com/components/marketing/sections/heroes
 -- HTML rendering example: https://srid.ca/obelisk-tutorial
