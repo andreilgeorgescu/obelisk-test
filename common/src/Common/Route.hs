@@ -26,11 +26,11 @@ import Obelisk.Route.TH
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()
-  -- You can define any routes that will be handled specially by the backend here.
-  -- i.e. These do not serve the frontend, but do something different, such as serving static files.
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
+  Landing :: FrontendRoute ()
+  Login :: FrontendRoute ()
   -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
 
 fullRouteEncoder

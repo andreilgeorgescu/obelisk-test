@@ -5,6 +5,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE GADTs #-}
 
 module Frontend where
 
@@ -28,6 +29,12 @@ import Obelisk.Route
 import Obelisk.Generated.Static
 
 import Reflex.Dom.Core
+import Common.Route
+import Obelisk.Frontend
+import Obelisk.Route
+import Obelisk.Route.Frontend
+
+import Reflex.Dom.Core
 
 import Common.Api
 import Common.Route
@@ -35,7 +42,7 @@ import Common.Route
 import Data.Text (Text)
 import qualified Data.Map as Map
 import Data.Map (Map)
-
+import Control.Monad.Fix (MonadFix)
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -49,35 +56,37 @@ frontend = Frontend
       elAttr "script" ("type" =: "application/javascript" <> "src" =: "https://cdn.tailwindcss.com") blank
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
-  , _frontend_body = do
-      -- el "h1" $ text "Welcome to Obelisk!"
-      -- el "p" $ text $ T.pack commonStuff
-
-      -- `prerender` and `prerender_` let you choose a widget to run on the server
-      -- during prerendering and a different widget to run on the client with
-      -- JavaScript. The following will generate a `blank` widget on the server and
-      -- print "Hello, World!" on the client.
-      prerender_ blank $ liftJSM $ void
-        $ jsg ("window" :: T.Text)
-        ^. js ("skeleton_lib" :: T.Text)
-        ^. js1 ("log" :: T.Text) ("Hello, World!" :: T.Text)
-
-      -- prerender_ blank $ void $ elDynHtml' "div" $ constDyn $(embedStringFile "frontend/src/test.html")
-
-      elAttr "div" ("class" =: "bg-white") $ do
-        el "header" $ do
-          headerWidget
-          heroWidget
-          socialProofWidget
-          featureSectionWidget
-          testimonialsWidget
-          pricingWidget
-          faqWidget
-          ctaWidget
-          footerWidget
-
-      return ()
+  , _frontend_body = mdo
+    subRoute_ $ \case
+      FrontendRoute_Main -> landingPage
+      Landing -> landingPage
+      Login -> login
   }
+
+-- bodyElement :: (DomBuilder t m, MonadFix m) => RoutedT t (R FrontendRoute) m ()
+-- bodyElement = subRoute_ $ \case
+--   FrontendRoute_Main -> landingPage
+--   Landing -> landingPage
+--   Login -> login
+
+login :: DomBuilder t m => m ()
+login = do
+  el "h1" $ text "test"
+
+landingPage :: DomBuilder t m => m ()
+landingPage = do
+  elAttr "div" ("class" =: "bg-white") $ do
+    el "header" $ do
+      headerWidget
+      heroWidget
+      socialProofWidget
+      featureSectionWidget
+      testimonialsWidget
+      pricingWidget
+      faqWidget
+      ctaWidget
+      footerWidget
+
 
 ---------- nav menu ---------------------------------------------
 headerWidget :: DomBuilder t m => m ()
