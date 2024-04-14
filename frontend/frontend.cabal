@@ -19,6 +19,7 @@ library
                , jsaddle-dom
                , mtl
                , transformers
+               , containers
 
   exposed-modules:
     Frontend
